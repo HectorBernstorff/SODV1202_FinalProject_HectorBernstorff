@@ -14,7 +14,7 @@ namespace Final_project
         private static char currentPlayerSymbol;
         private static int chosenColumn = 0;
         private static bool done = false;
-        private static bool simulation = true; //Change to true for Player VS Computer mode.
+        private static bool simulation = false; //Change to true for Player VS Computer mode.
 
         static async Task Main(string[] args)
         {
