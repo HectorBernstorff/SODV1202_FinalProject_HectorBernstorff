@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,30 +14,59 @@ namespace Final_project
         private static char current_player;
         private static int selected_column = 0;
         private static bool done = false;
-        private static bool onePlayer_mode = true; //Change to false for Player VS Playes mode.
 
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             Console.WriteLine("Final Project Connect 4\n");
             Console.WriteLine("Each player will choose a column to drop their symbol on each turn.");
-            Console.WriteLine("The winner of the game is the first to have 4 discs of their symbol/color in a row. \nWich can be horizontally, vertically, or diagonally. \nHow to play: Choose a column, type a number from 0 to 8 referring to the selected column and then press enter!");
-            Console.WriteLine("\nThe first to play will be chosen randomly");
+            Console.WriteLine("The winner of the game is the first to have 4 discs of their symbol/color in a row. \nWich can be horizontally, vertically, or diagonally. \nHow to play: Choose a column, type a number between 0 and 8 referring to the selected column and then press enter!");
+            Console.WriteLine("\nThe first to play will be chosen randomly.");
             Console.WriteLine("\nPLAYER (X) and PLAYER (O).");
 
-            if (!onePlayer_mode)
+            game();
+        }
+
+        private static void Board()
+        {
+            for (int i = 0; i < row_col; i++)
             {
-                Console.WriteLine("\n********** Player VS Playes Mode **********\n");
+                column_full[i] = false;
+                for (int j = 0; j < row_col; j++)
+                    board[i, j] = '#';
+            }
+        }
+        private static void startBoard()
+        {
+            Console.WriteLine("\n\n 012345678");
+            for (int i = 1; i < row_col; i++)
+            {
+                Console.Write("|");
+                for (int j = 0; j < row_col; j++)
+                {
+                    Console.Write(Connect4.board[i, j]);
+                }
+                Console.WriteLine();
+            }
+        }
+        private static void game()
+        {
+            Console.WriteLine("\nFor Player vs Player mode press (1), or for PLayer vs Computer mode press (2):");
+            string mode = Console.ReadLine();
+            if (mode == "1")
+            {
+                Console.WriteLine("\n********** Player VS Player Mode **********\n");
                 Console.WriteLine("Before starting the game decide who will be the X and who will be the O.");
                 Console.WriteLine("If you have alredy decided press enter:");
                 Console.ReadLine();
             }
-            else
+            else if (mode == "2")
             {
                 Console.WriteLine("\n********** Player(O) VS Computer(X) Mode **********\n");
                 Console.WriteLine("Before starting the game know that on this mode: Player will always be (O) and Computer will always be (X) ");
                 Console.WriteLine("If you are ready press enter:");
                 Console.ReadLine();
             }
+
             Board();
             startBoard();
 
@@ -53,96 +82,98 @@ namespace Final_project
                 current_player = 'O';
                 Console.WriteLine("PLAYER (O) starts.");
             }
-                do
+            do
+            {
+                if (current_player == 'X')
                 {
-                    if (current_player == 'X')
+                    Console.WriteLine("PLAYER (x):");
+                }
+                else
+                {
+                    Console.Write("PLAYER (O):\n");
+                }
+
+                try
+                {
+                    if (mode == "2")
                     {
-                        Console.WriteLine("PLAYER (x):");
+                        do
+                        {
+                            if (current_player == 'X')
+                            {
+                                selected_column = new Random().Next() % 9;
+                                Console.WriteLine(selected_column);
+                            }
+                            else
+                            {
+                                double temp = Double.Parse(Console.ReadLine());
+                                selected_column = (int)temp;
+                            }
+                        }
+                        while (done == true);
                     }
                     else
                     {
-                        Console.Write("PLAYER (O):\n");
-                    }
-
-                    try
-                    {
-                        if (onePlayer_mode)
-                        {
-                            do
-                            {
-                                if (current_player == 'X')
-                                {
-                                    await Task.Delay(1500);
-                                selected_column = new Random().Next() % 9;
-                                    Console.WriteLine(selected_column);
-                                }
-                                else
-                                {
-                                    double temp = Double.Parse(Console.ReadLine());
-                                selected_column = (int)temp;
-                                }
-                            }
-                            while (done == true);
-                        }
-                        else
-                        {
-                            double temp = Double.Parse(Console.ReadLine());
+                        double temp = Double.Parse(Console.ReadLine());
                         selected_column = (int)temp;
-                        }
+                    }
 
-                        if (selected_column >= 0 && selected_column <= 8)
+                    if (selected_column >= 0 && selected_column <= 8)
+                    {
+                        placeInColumn(selected_column, current_player);
+                        if (WinConditionMet(current_player))
                         {
-                            placeInColumn(selected_column, current_player);
-                            if (WinConditionMet(current_player))
-                            {
-                                Console.WriteLine("Player {0} Won!", current_player);
-                                PlayAgainPrompt();
+                            Console.WriteLine("Player {0} Won!", current_player);
+                            PlayAgain();
                         }
-                            else if (!column_full[selected_column])
-                            {
+                        else if (!column_full[selected_column])
+                        {
                             current_player = (current_player == 'O' ? 'X' : 'O');
-                            }
-
-                            if (BoardIsFull())
-                            {
-                                Console.WriteLine("Tie!");
-                                PlayAgainPrompt();
-                            }
                         }
-                        else
+
+                        if (BoardIsFull())
                         {
-                            Console.WriteLine("CHOOSE BETWEEN 0 AND 8.");
+                            Console.WriteLine("Tie!");
+                            PlayAgain();
                         }
                     }
-                    catch (Exception)
+                    else
                     {
                         Console.WriteLine("CHOOSE BETWEEN 0 AND 8.");
                     }
-                } while (!done); 
-        } 
-
-        private static void PlayAgainPrompt()
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("CHOOSE BETWEEN 0 AND 8.");
+                }
+            } while (!done);
+        }
+        private static void placeInColumn(int columnNumber, char symbol)
         {
-            Console.WriteLine("\nEnter Y to play again or N to exit.");
-            if (Console.ReadLine().ToUpper().StartsWith("Y"))
+            int index = row_col - 1;
+            char cc = Connect4.board[index, columnNumber];
+            while ((cc == 'X' || cc == 'O') && index >= 0)
             {
-                Board();
+                index--;
+                if (index >= 0) cc = Connect4.board[index, columnNumber];
+            }
+            if (index < 1) column_full[columnNumber] = true;
+            if (!column_full[columnNumber])
+            {
+                Connect4.board[index, columnNumber] = symbol;
                 startBoard();
-                done = false;
             }
-            else done = true;
-        }
-
-        private static void Board()
-        {
-            for (int i = 0; i < row_col; i++)
+            else
             {
-                column_full[i] = false;
-                for (int j = 0; j < row_col; j++)
-                    board[i, j] = '#';
+                Console.WriteLine("FULL CLOLUMN!");
             }
         }
-
+        private static bool BoardIsFull()
+        {
+            bool boardIsFull = true;
+            for (int i = 0; i < row_col; i++) if (!column_full[i]) boardIsFull = false;
+            return boardIsFull;
+        }
         private static bool WinConditionMet(char cps)
         {
             bool winOrNot = false;
@@ -156,7 +187,7 @@ namespace Final_project
                         board[i, j + 2] == cps &&
                         board[i, j + 3] == cps)
                     {
-                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED! Row {0}, Column {1}.", i, j);
+                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED!");
                         winOrNot = true;
                     }
                 }
@@ -171,7 +202,7 @@ namespace Final_project
                         board[i + 2, j] == cps &&
                         board[i + 3, j] == cps)
                     {
-                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED! Row {0}, Column {1}.", i, j);
+                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED!");
                         winOrNot = true;
                     }
                 }
@@ -186,7 +217,7 @@ namespace Final_project
                         board[i + 2, j + 2] == cps &&
                         board[i + 3, j + 3] == cps)
                     {
-                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED! Row {0}, Column {1}.", i, j);
+                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED!");
                         winOrNot = true;
                     }
                 }
@@ -201,53 +232,23 @@ namespace Final_project
                         board[i + 2, j - 2] == cps &&
                         board[i + 3, j - 3] == cps)
                     {
-                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED! Row {0}, Column {1}.", i, j);
+                        Console.WriteLine("4 SYMBOLS IN A ROW DETECTED!");
                         winOrNot = true;
                     }
                 }
             }
             return winOrNot;
         }
+        private static void PlayAgain()
+        {
+            Console.WriteLine("\nEnter Y to play again or N to exit.");
+            if (Console.ReadLine().ToUpper().StartsWith("Y"))
+            {
+                game();
+            }
+            else done = true;
+        }
 
-        private static bool BoardIsFull()
-        {
-            bool boardIsFull = true;
-            for (int i = 0; i < row_col; i++) if (!column_full[i]) boardIsFull = false;
-            return boardIsFull;
-        }
-        private static void startBoard()
-        {
-            Console.WriteLine("\n\n 012345678");
-            for (int i = 1; i < row_col; i++)
-            {
-                Console.Write("|");
-                for (int j = 0; j < row_col; j++)
-                {
-                    Console.Write(Connect4.board[i, j]);
-                }
-                Console.WriteLine();
-            }
-        }
-        private static void placeInColumn(int columnNumber, char symbol)
-        {
-            int index = row_col - 1;
-            char cc = Connect4.board[index, columnNumber];
-            while ((cc == 'X' || cc == 'O') && index >= 0)
-            {
-                index--;
-                if (index >= 0) cc = Connect4.board[index, columnNumber];
-            }
-            if (index < 0) column_full[columnNumber] = true;
-            if (!column_full[columnNumber])
-            {
-                Connect4.board[index, columnNumber] = symbol;
-                startBoard();
-            }
-            else
-            {
-                Console.WriteLine("FULL CLOLUMN!");
-            }
-        }
     }
 }
 
